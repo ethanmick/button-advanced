@@ -1,9 +1,14 @@
 'use client'
 
+import { mergeRefs } from '@/lib/merge-refs'
+import { AriaButtonProps, useButton } from '@react-aria/button'
+import { useFocusRing } from '@react-aria/focus'
+import { useHover } from '@react-aria/interactions'
 import { VariantProps, cva } from 'class-variance-authority'
 import clsx from 'clsx'
-import { forwardRef } from 'react'
+import { forwardRef, useRef } from 'react'
 import { twMerge } from 'tailwind-merge'
+import { mergeProps } from './merge'
 
 const variants = cva(
   [
@@ -14,10 +19,10 @@ const variants = cva(
     'cursor-pointer',
     'disabled:cursor-not-allowed',
     'tracking-wide',
-    'transition',
+    'transition-[background-color,box-shadow,text-color,transform]',
+    'duration-200',
     'rounded-full',
     'outline-none',
-    'focus:scale-[0.98]',
   ],
   {
     variants: {
@@ -25,15 +30,16 @@ const variants = cva(
         primary: [
           'font-semibold',
           'bg-indigo-500',
-          'hover:bg-indigo-600',
+          'data-[hovered=true]:bg-indigo-600',
           'text-white',
           'shadow',
-          'hover:shadow-md',
+          'data-[hovered=true]:shadow-md',
           'disabled:bg-indigo-500/50',
           'disabled:shadow',
-          'ring-offset-2',
-          'focus-visible:ring-2',
-          'ring-indigo-500/70',
+          'data-[focus-visible]:ring-indigo-500/70',
+          'data-[pressed=true]:scale-[0.98]',
+          'data-[focus-visible]:ring-2',
+          'data-[focus-visible]:ring-offset-2',
         ],
         secondary: [
           'font-normal',
@@ -44,9 +50,10 @@ const variants = cva(
           'shadow',
           'border',
           'border-neutral-200/50',
-          'ring-offset-2',
-          'focus-visible:ring-2',
-          'ring-gray-200',
+          'data-[focus-visible]:ring-gray-200',
+          'data-[pressed=true]:scale-[0.98]',
+          'data-[focus-visible]:ring-2',
+          'data-[focus-visible]:ring-offset-2',
         ],
         destructive: [
           'font-semibold',
@@ -58,17 +65,18 @@ const variants = cva(
           'hover:shadow-md',
           'disabled:bg-red-500/50',
           'disabled:shadow',
-          'ring-offset-2',
-          'focus-visible:ring-2',
-          'ring-red-500',
+          'data-[focus-visible]:ring-red-500',
+          'data-[pressed=true]:scale-[0.98]',
+          'data-[focus-visible]:ring-2',
+          'data-[focus-visible]:ring-offset-2',
         ],
         ghost: [
           'font-light',
           'text-gray-950',
           'hover:text-gray-600',
           'disabled:text-gray-950',
-          'ring-gray-300',
-          'focus-visible:ring-1',
+          'data-[focus-visible]:ring-gray-500/30',
+          'data-[focus-visible]:ring-1',
         ],
         link: [
           'font-light',
@@ -77,8 +85,8 @@ const variants = cva(
           'disabled:text-indigo-500/50',
           'disabled:no-underline',
           'hover:underline',
-          'ring-indigo-300',
-          'focus-visible:ring-1',
+          'data-[focus-visible]:ring-indigo-500/30',
+          'data-[focus-visible]:ring-1',
         ],
       },
       size: {
@@ -113,28 +121,55 @@ const Loading = ({ variant }: VariantProps<typeof loading>) => (
 )
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
+  AriaButtonProps<'button'> &
   VariantProps<typeof variants> & {
     loading?: boolean
   }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, children, variant, size, loading, ...rest }, ref) => (
-    <button
-      ref={ref}
-      className={twMerge(clsx(variants({ variant, size, className })))}
-      {...rest}
-    >
-      {loading && <Loading variant={variant} />}
-      <span
-        className={clsx('transition', {
-          'opacity-0': loading,
-          'opacity-100': !loading,
-        })}
+  (props, forwardedRef) => {
+    const {
+      className,
+      children,
+      variant,
+      size,
+      loading,
+      disabled,
+      onClick,
+      ...rest
+    } = props
+    const ref = useRef<HTMLButtonElement>(null)
+    const { focusProps, isFocusVisible } = useFocusRing()
+    const { hoverProps, isHovered } = useHover(props)
+    const { buttonProps, isPressed } = useButton(
+      {
+        ...rest,
+        isDisabled: disabled,
+      },
+      ref
+    )
+
+    return (
+      <button
+        ref={mergeRefs([ref, forwardedRef])}
+        className={twMerge(clsx(variants({ variant, size, className })))}
+        {...mergeProps(buttonProps, focusProps, hoverProps)}
+        data-pressed={isPressed || undefined}
+        data-hovered={isHovered || undefined}
+        data-focus-visible={isFocusVisible || undefined}
       >
-        {children}
-      </span>
-    </button>
-  )
+        {loading && <Loading variant={variant} />}
+        <span
+          className={clsx('transition', {
+            'opacity-0': loading,
+            'opacity-100': !loading,
+          })}
+        >
+          {children}
+        </span>
+      </button>
+    )
+  }
 )
 
 Button.displayName = 'Button'
