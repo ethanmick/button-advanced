@@ -1,14 +1,11 @@
 'use client'
 
-import { mergeRefs } from '@/lib/merge-refs'
-import { AriaButtonProps, useButton } from '@react-aria/button'
-import { useFocusRing } from '@react-aria/focus'
-import { useHover } from '@react-aria/interactions'
+import { mergeProps, mergeRefs } from '@/lib'
 import { VariantProps, cva } from 'class-variance-authority'
 import clsx from 'clsx'
 import { forwardRef, useRef } from 'react'
+import { AriaButtonProps, useButton, useFocusRing, useHover } from 'react-aria'
 import { twMerge } from 'tailwind-merge'
-import { mergeProps } from './merge'
 
 const variants = cva(
   [
