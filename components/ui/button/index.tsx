@@ -125,16 +125,8 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (props, forwardedRef) => {
-    const {
-      className,
-      children,
-      variant,
-      size,
-      loading,
-      disabled,
-      onClick,
-      ...rest
-    } = props
+    const { className, children, variant, size, loading, disabled, ...rest } =
+      props
     const ref = useRef<HTMLButtonElement>(null)
     const { focusProps, isFocusVisible } = useFocusRing()
     const { hoverProps, isHovered } = useHover(props)
