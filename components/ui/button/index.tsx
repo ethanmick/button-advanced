@@ -129,7 +129,10 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       props
     const ref = useRef<HTMLButtonElement>(null)
     const { focusProps, isFocusVisible } = useFocusRing()
-    const { hoverProps, isHovered } = useHover(props)
+    const { hoverProps, isHovered } = useHover({
+      ...props,
+      isDisabled: disabled,
+    })
     const { buttonProps, isPressed } = useButton(
       {
         ...rest,
